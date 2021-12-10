@@ -2,5 +2,7 @@ cnn/deploy.prototxt
 cnn/hed_pretrained_bsds.caffemodel
 __pycache__/
 hmp/
+scripts/
+old_hmp/
 *.swp
 *~
