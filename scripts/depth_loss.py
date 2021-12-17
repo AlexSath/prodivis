@@ -8,7 +8,7 @@ import cv2
 
 def main():
     norm_folder = sys.argv[1]
-    norm_tiffs = tools.get_files(norm_folder)
+    norm_tiffs = tools.get_files(norm_folder)   
     means = []
     depths = []
     for idx, tiff in enumerate(norm_tiffs):
