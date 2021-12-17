@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 # Function: get_int_input()
 # Description: Gets integer from the user between min and max provided. Shows
@@ -72,6 +73,8 @@ def get_files(folder):
 # Pre-Conditions: Img object provided
 # Post-Conditions: Return img object with pixels min-max scaled.
 def min_max_scale(img):
+    # std_max = np.nanmean(img) + 4 * np.nanstd(img)
+    # img[img > std_max] = std_max
     minimum = img.min()
     maximum = img.max()
     # The formula for min-max scaling:

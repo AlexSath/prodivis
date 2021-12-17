@@ -21,7 +21,6 @@ def mean_normalizer(tiff_list, norm_list, threshold = 10):
     tiff_dirname = os.path.dirname(tiff_list[0]).split(os.path.sep)[-1]
     norm_dirname = os.path.dirname(norm_list[0]).split(os.path.sep)[-1]
 
-    #
     out_dir = os.path.abspath(os.path.join(os.path.dirname(tiff_list[0]), '..', f"{tiff_dirname}_norm_{norm_dirname}_mean_t{threshold}"))
     if not os.path.isdir(out_dir):
         os.mkdir(out_dir)
@@ -62,6 +61,7 @@ def mean_normalize(tiffpath, normpath, out_dir, thresh):
     cv2.imwrite(savepath, tiffBW)
     return savepath
 
+# Cell Normalizer Not Working Yet (more work needed with neural networks...)
 def cell_normalizer(tiff_list, norm_list, phalloidin_list, prototxt, model, threshold = 10, blur_matrix = (50, 50)):
     tiff_dirname = os.path.dirname(tiff_list[0]).split(os.path.sep)[-1]
     norm_dirname = os.path.dirname(norm_list[0]).split(os.path.sep)[-1]
