@@ -9,6 +9,17 @@ import sys
 import norm_heatmap as nhmp
 import warnings
 
+def colocalize(tiffsA, tiffsB):
+    new_dir = os.path.sep.join(tiffsA[0].split(os.path.sep)[:-2])
+    if not os.path.isdir(new_dir):
+        os.mkdir(newdir)
+    else:
+        use_temp = get_int_input(f"Folder already found at {new_dir}. Should colocalization tiffs be regenerated (1-y; 0-n)?", 0, 1)
+        if not use_temp:
+            return tools.get_files(new_dir)
+
+    
+
 
 def main():
     # Creating command-line parser
@@ -68,8 +79,8 @@ def main():
         elif vis == 'c':
             phalloidins = tools.get_files(bound_dir)
             # TODO: Error trap prototxt and model file inputs
-            tiffsAM = normalize.cell_normalizer(tiffsA, norms, phalloidins, args.prototxt, args.model, 10, (50, 50))
-            tiffsBM = normalize.cell_normalizer(tiffsB, norms, phalloidins, args.prototxt, args.model, 10, (50, 50))
+            tiffsAC = normalize.cell_normalizer(tiffsA, norms, phalloidins, args.prototxt, args.model, 10, (50, 50))
+            tiffsBC = normalize.cell_normalizer(tiffsB, norms, phalloidins, args.prototxt, args.model, 10, (50, 50))
             prefix = f'{stack_dir.split(os.path.sep)[-2]}_{stack_dir.split(os.path.sep)[-1]}_n_{norm_dir.split(os.path.sep)[-1]}_cellSpecific_t{threshold}_z{z_min}-{z_max}'
             warnings.warn("Cell Specific normalization is not currently supported")
             # prefix_tiffs[prefix] = tiffs
@@ -86,6 +97,8 @@ def main():
         out_dir = os.path.join(out_dir, prefix)
         tools.smart_make_dir(out_dir)
 
+        tiffsA, tiffsB = tiffs
+        tiffs = colocalize(tiffsA, tiffsB)
         # Getting list of output heatmap image objects (pixel arrays)
         if algorithm == 1:
             out = nhmp.matrix_stack(tiffs[z_min:z_max], viewpoints, z_multiplier)

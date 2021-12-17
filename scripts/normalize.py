@@ -57,7 +57,7 @@ def mean_normalize(tiffpath, normpath, out_dir, thresh):
     tiffBW = tiffBW.astype(float)
     tiffBW[tiffBW < thresh] = 0
     tiffBW /= mean
-    savepath = os.path.join(out_dir, f"{'_'.join(tiffpath.split(os.path.sep)[-1].split('_')[:-1])}_norm_{os.path.dirname(normpath).split(os.path.sep)[-1]}_{tiffZ}.tif")
+    savepath = os.path.join(out_dir, f"{'_'.join(tiffpath.split(os.path.sep)[-1].split('_')[:-1])}_norm_{os.path.dirname(normpath).split(os.path.sep)[-1]}_mean_{tiffZ}.tif")
     cv2.imwrite(savepath, tiffBW)
     return savepath
 

@@ -12,8 +12,8 @@ def create_matrix(tiff_list):
     l = []
     for tiff in tiff_list:
         l.append(cv2.cvtColor(cv2.imread(tiff), cv2.COLOR_BGR2GRAY))
-    arr = np.asarray(l, float)
-    return arr
+    l = np.asarray(l, float)
+    return l
 
 def mult_view(img, z_mult):
     out = []
@@ -79,7 +79,6 @@ def stack(tiff_list, viewpoints, z_mult, norm = False):
             elif viewpoints[i] == 'x':
                 for jdx, row in enumerate(transposed):
                     img_list[i][idx][jdx] = np.mean(row)
-
 
     print(f"Completing post-processing for {', '.join(viewpoints[:-1])} and {viewpoints[-1] if len(viewpoints) > 1 else viewpoints[0]} composite(s) from {os.path.dirname(tiff_list[0])}...")
     for idx, viewpoint in enumerate(viewpoints):
@@ -182,8 +181,6 @@ def main():
         out_dir = os.path.join(out_dir, prefix)
         tools.smart_make_dir(out_dir)
 
-        tiffsA, tiffsB = tiffs
-        tiffs = colocalize(tiffsA, tiffsB)
         # Getting list of output heatmap image objects (pixel arrays)
         if algorithm == 1:
             out = matrix_stack(tiffs[z_min:z_max], viewpoints, z_multiplier)
