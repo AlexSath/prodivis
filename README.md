@@ -11,7 +11,7 @@ These two problems lead to a loss in percieved fluorescence near the bottom of 3
  
 DAPI, which stains the DNA in these nuclei, should be the same - on average - per slice across the depth of the cultured GBM.
 
-![DAPI intensity loss graph](https://github.com/AlexSath/prodivis/blob/master/3NT33_DAPI_depth_loss.png)
+![DAPI intensity loss graph](https://gi://github.com/AlexSath/prodivis/blob/master/depth_loss_images/3NT33_DAPI_depth_loss.png)
 
 This suggests that confocal images of 3D structures may not actually represent biological reality. Fluorescent signal may be underestimated at the bottom of tumoroids. 
 
