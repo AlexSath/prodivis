@@ -22,7 +22,7 @@ def main():
     plt.plot(depths, means)
     plt.ylim([0, round(max(means) + (np.std(means) / 5), 2)])
     plt.xlabel('% Depth Across Tumor')
-    plt.ylabel('Mean DAPI Pixel Intensity')
+    plt.ylabel(sys.argv[3])
     plt.savefig(sys.argv[2], format = 'png')
 
 if __name__ == '__main__':
