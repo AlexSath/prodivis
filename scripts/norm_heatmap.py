@@ -157,18 +157,18 @@ def main():
 
         if vis == 'm':
             # Normalizing stack tiffs by normalization tiffs (if norm tiffs provided)
-            tiffs = normalize.mean_normalizer(tiffs, norms, threshold)
+            tiffsM = normalize.mean_normalizer(tiffs, norms, threshold)
             # Prefix represents file prefix for generated heatmaps
             prefix = f'{stack_dir.split(os.path.sep)[-2]}_{stack_dir.split(os.path.sep)[-1]}_n_{norm_dir.split(os.path.sep)[-1]}_mean_t{threshold}_z{z_min}-{z_max}'
-            prefix_tiffs[prefix] = tiffs
+            prefix_tiffs[prefix] = tiffsM
 
         elif vis == 'c':
             phalloidins = tools.get_files(bound_dir)
             # TODO: Error trap prototxt and model file inputs
-            tiffs = normalize.cell_normalizer(tiffs, norms, phalloidins, args.prototxt, args.model, 10, (50, 50))
+            tiffsC = normalize.cell_normalizer(tiffs, norms, phalloidins, args.prototxt, args.model, 10, (50, 50))
             prefix = f'{stack_dir.split(os.path.sep)[-2]}_{stack_dir.split(os.path.sep)[-1]}_n_{norm_dir.split(os.path.sep)[-1]}_cellSpecific_t{threshold}_z{z_min}-{z_max}'
             warnings.warn("Cell Specific normalization is not currently supported")
-            # prefix_tiffs[prefix] = tiffs
+            # prefix_tiffs[prefix] = tiffsC
 
         elif vis == 'v':
             warnings.warn("Generation of 3D Visualization is not currently supported")
@@ -182,6 +182,8 @@ def main():
         out_dir = os.path.join(out_dir, prefix)
         tools.smart_make_dir(out_dir)
 
+        tiffsA, tiffsB = tiffs
+        tiffs = colocalize(tiffsA, tiffsB)
         # Getting list of output heatmap image objects (pixel arrays)
         if algorithm == 1:
             out = matrix_stack(tiffs[z_min:z_max], viewpoints, z_multiplier)
