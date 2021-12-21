@@ -9,7 +9,7 @@ import sys
 import norm_heatmap as nhmp
 import warnings
 
-def colocalize(tiffsA, tiffsB):
+def colocalizer(tiffsA, tiffsB):
     new_dir = os.path.sep.join(tiffsA[0].split(os.path.sep)[:-2])
     if not os.path.isdir(new_dir):
         os.mkdir(newdir)
@@ -18,7 +18,13 @@ def colocalize(tiffsA, tiffsB):
         if not use_temp:
             return tools.get_files(new_dir)
 
-    
+    colocalized_tiffs = []
+    for tA, tB in zip(tiffsA, tiffsB):
+        colocalize(tA, tB)
+
+
+def colocalize(tA, tB):
+    pass
 
 
 def main():
@@ -98,7 +104,7 @@ def main():
         tools.smart_make_dir(out_dir)
 
         tiffsA, tiffsB = tiffs
-        tiffs = colocalize(tiffsA, tiffsB)
+        tiffs = colocalizer(tiffsA, tiffsB)
         # Getting list of output heatmap image objects (pixel arrays)
         if algorithm == 1:
             out = nhmp.matrix_stack(tiffs[z_min:z_max], viewpoints, z_multiplier)
