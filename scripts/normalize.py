@@ -33,9 +33,10 @@ def mean_normalizer(tiff_list, norm_list, threshold = 10):
     norm_tiffs = []
     count = 1
     for tiff, norm in zip(tiff_list, norm_list):
-        print(f"Normalizing {tiff_dirname} using {norm_dirname} ({count}/{len(tiff_list)})...")
+        print(f"Normalizing {tiff_dirname} using {norm_dirname} ({count}/{len(tiff_list)})...", end = '\n')
         norm_tiffs.append(mean_normalize(tiff, norm, out_dir, threshold))
         count += 1
+    print('')
 
     return norm_tiffs
 
@@ -54,10 +55,11 @@ def mean_normalize(tiffpath, normpath, out_dir, thresh):
 
     tiff = cv2.imread(tiffpath)
     tiffBW = cv2.cvtColor(tiff, cv2.COLOR_BGR2GRAY)
-    tiffBW = tiffBW.astype(float)
     tiffBW[tiffBW < thresh] = 0
-    tiffBW /= mean
-    savepath = os.path.join(out_dir, f"{'_'.join(tiffpath.split(os.path.sep)[-1].split('_')[:-1])}_norm_{os.path.dirname(normpath).split(os.path.sep)[-1]}_mean_{tiffZ}.tif")
+    tiffBW = tiffBW / mean.astype(np.float64)
+    tiffBW = tiffBW.astype(np.uint8)
+    tiffBW *= 50 # testing normalization scaling
+    savepath = os.path.join(out_dir, f"{'_'.join(tiffpath.split(os.path.sep)[-1].split('_')[:-1])}_norm_{os.path.dirname(normpath).split(os.path.sep)[-1]}_mean_{tiffZ}.tiff")
     cv2.imwrite(savepath, tiffBW)
     return savepath
 

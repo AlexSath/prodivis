@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 
 # Function: get_int_input()
@@ -75,9 +76,13 @@ def get_files(folder):
 def min_max_scale(img):
     # std_max = np.nanmean(img) + 4 * np.nanstd(img)
     # img[img > std_max] = std_max
+    np.seterr(all = 'raise')
+
     minimum = img.min()
     maximum = img.max()
     # The formula for min-max scaling:
-    img = (img - minimum) / (maximum - minimum)
+    img = (img - minimum) / (maximum - minimum) if maximum - minimum != 0 else (img - minimum) / 1
     img *= 255
+    if isinstance(img, np.ma.MaskedArray):
+        img = np.ma.getdata(img)
     return img
