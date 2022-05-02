@@ -3,5 +3,8 @@ cnn/hed_pretrained_bsds.caffemodel
 __pycache__/
 hmp/
 old_hmp/
+paper_hmp/
+paper_hmp_pre_outlier/
 *.swp
 *~
+.gitignore

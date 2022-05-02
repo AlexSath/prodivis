@@ -50,12 +50,20 @@ def mean_normalize(tiffpath, normpath, out_dir, thresh):
     normBW = cv2.cvtColor(norm, cv2.COLOR_BGR2GRAY)
     normBW = normBW.flatten()
     normBW = normBW.astype(float)
-    normBW[normBW < thresh] = np.nan
+    outlier_min, outlier_max = tools.get_outlier_boundaries(normBW)
+    # normBW[normBW < thresh] = np.nan
+    normBW[normBW < outlier_min] = np.nan
+    normBW[normBW > outlier_max] = np.nan
     mean = np.nanmean(normBW)
 
     tiff = cv2.imread(tiffpath)
     tiffBW = cv2.cvtColor(tiff, cv2.COLOR_BGR2GRAY)
-    tiffBW[tiffBW < thresh] = 0
+    # tiffBW[tiffBW < thresh] = 0
+    flattened = tiffBW.flatten()
+    # outlier_min, outlier_max = tools.get_outlier_boundaries(flattened)
+    # tiffBW[tiffBW < outlier_min] = 0
+    # tiffBW[tiffBW > outlier_max] = 0
+    tiffBW[tiffBW > np.mean(flattened) + 3 * np.std(flattened)] = 0
     tiffBW = tiffBW / mean.astype(np.float64)
     tiffBW = tiffBW.astype(np.uint8)
     tiffBW *= 50 # testing normalization scaling

@@ -5,20 +5,32 @@ import numpy as np
 import math
 import tools
 import cv2
+import pandas as pd
 
-def main():
-    norm_folder = sys.argv[1]
-    norm_tiffs = tools.get_files(norm_folder)   
+def get_DAPI_dirs(dirpath):
+    DAPIlist = {}
+    for root, dirs, files in os.walk(dirpath):
+        for d in dirs:
+            if d == "DAPI":
+                rootname = os.path.dirname(root)
+                dapipath = os.path.join(root, d)
+                DAPIlist[rootname] = get_tiff_data(dapipath)
+    return DAPIlist
+
+
+def get_tiff_data(dapipath):
+    norm_tiffs = tools.get_files(dapipath)
     means = []
-    depths = []
-    for idx, tiff in enumerate(norm_tiffs):
+    for tiff in norm_tiffs:
         img = cv2.imread(tiff)
         imgBW = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         imgBW = imgBW.astype(float)
         imgBW[imgBW == 0] = np.nan
         means.append(np.nanmean(imgBW))
-        depths.append(idx / len(norm_tiffs))
+    return means
 
+
+def plot_depths(depths, means):
     fig = plt.figure(figsize = (int(sys.argv[4]), int(sys.argv[5])))
     ax = fig.add_subplot(111)
     label_format = '{}'
@@ -36,6 +48,13 @@ def main():
     ax.set_yticklabels([label_format.format(y) for y in ax.get_yticks().tolist()], fontsize = 20)
 
     plt.savefig(sys.argv[2], format = 'png')
+
+def main():
+    norm_root_folder = sys.argv[1]
+    dapi_dict = get_DAPI_dirs(norm_root_folder)
+    df = pd.DataFrame(dapi_dict)
+    print(df.head())
+
 
 if __name__ == '__main__':
     main()

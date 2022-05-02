@@ -1,6 +1,8 @@
 import os
 import sys
 import numpy as np
+from scipy.stats import skew
+from matplotlib import pyplot as plt
 
 # Function: get_int_input()
 # Description: Gets integer from the user between min and max provided. Shows
@@ -76,6 +78,9 @@ def get_files(folder):
 def min_max_scale(img):
     # std_max = np.nanmean(img) + 4 * np.nanstd(img)
     # img[img > std_max] = std_max
+    plt.hist(img.flatten())
+    plt.show()
+
     np.seterr(all = 'raise')
 
     minimum = img.min()
@@ -86,3 +91,10 @@ def min_max_scale(img):
     if isinstance(img, np.ma.MaskedArray):
         img = np.ma.getdata(img)
     return img
+
+
+def get_outlier_boundaries(data):
+    q75, q25 = np.percentile(data, [75, 25])
+    iqr = q75 - q25
+    med = np.median(data)
+    return med - 1.5*iqr, med + 1.5*iqr
