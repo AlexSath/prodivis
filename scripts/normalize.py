@@ -3,7 +3,8 @@ import cv2
 import numpy as np
 import tools
 import sys
-import subprocess
+from scipy.optimize import curve_fit
+from matplotlib import pyplot as plt
 
 def matrix_mean_normalizer(objective, normalization):
     z_means = np.mean(np.mean(normalization, axis = 2), axis = 1)
@@ -17,11 +18,13 @@ def matrix_mean_normalizer(objective, normalization):
 # Pre-Conditions: List of path-like strings for tiff and norm, integer threshold
 # Post-Conditions: New directory filled with normalized tiffs created. Returned
 #                  list of path-like strings to generated normalized tiffs.
-def mean_normalizer(tiff_list, norm_list, threshold = 10):
+def mean_normalizer(tiff_list, norm_list, threshold, outlier_stddevs, raw_norm):
     tiff_dirname = os.path.dirname(tiff_list[0]).split(os.path.sep)[-1]
     norm_dirname = os.path.dirname(norm_list[0]).split(os.path.sep)[-1]
 
-    out_dir = os.path.abspath(os.path.join(os.path.dirname(tiff_list[0]), '..', f"{tiff_dirname}_norm_{norm_dirname}_mean_t{threshold}"))
+    dirname = f"{tiff_dirname}_{'n_' if not raw_norm else 'rn_'}{norm_dirname}" + \
+              f"{'' if threshold == 0 else f'_t{threshold}'}{'' if outlier_stddevs == -1 else f'_{outlier_stddevs}std'}"
+    out_dir = os.path.abspath(os.path.join(os.path.dirname(tiff_list[0]), '..', dirname))
     if not os.path.isdir(out_dir):
         os.mkdir(out_dir)
     else:
@@ -34,45 +37,43 @@ def mean_normalizer(tiff_list, norm_list, threshold = 10):
     count = 1
     for tiff, norm in zip(tiff_list, norm_list):
         print(f"Normalizing {tiff_dirname} using {norm_dirname} ({count}/{len(tiff_list)})...", end = '\n')
-        norm_tiffs.append(mean_normalize(tiff, norm, out_dir, threshold))
+        norm_tiffs.append(mean_normalize(tiff, norm, out_dir, threshold, outlier_stddevs, raw_norm))
         count += 1
     print('')
 
     return norm_tiffs
 
-def mean_normalize(tiffpath, normpath, out_dir, thresh):
+
+def tiff_mean(normpath, thresh, stddevs, raw_norm):
+    normBW = cv2.cvtColor(cv2.imread(normpath), cv2.COLOR_BGR2GRAY)
+    normBW = normBW.flatten().astype(float)
+    if not raw_norm:
+        normBW[normBW < thresh] = np.nan
+        if stddevs != -1:
+            normBW[normBW > np.mean(normBW) + stddevs * np.std(normBW)] = np.nan
+    return np.nanmean(normBW)
+
+
+def mean_normalize(tiffpath, normpath, out_dir, thresh, stddevs, raw_norm):
     tiffZ = tiffpath.split('_')[-1].split('.')[0]
     normZ = normpath.split('_')[-1].split('.')[0]
     if tiffZ != normZ:
         raise ValueError(f"Z-value for reference tiff ({tiffZ}) is not equal to Z-value for normalization tiff ({normZ})")
 
-    norm = cv2.imread(normpath)
-    normBW = cv2.cvtColor(norm, cv2.COLOR_BGR2GRAY)
-    normBW = normBW.flatten()
-    normBW = normBW.astype(float)
-    outlier_min, outlier_max = tools.get_outlier_boundaries(normBW)
-    # normBW[normBW < thresh] = np.nan
-    normBW[normBW < outlier_min] = np.nan
-    normBW[normBW > outlier_max] = np.nan
-    mean = np.nanmean(normBW)
-
-    tiff = cv2.imread(tiffpath)
-    tiffBW = cv2.cvtColor(tiff, cv2.COLOR_BGR2GRAY)
-    # tiffBW[tiffBW < thresh] = 0
+    tiffBW = cv2.cvtColor(cv2.imread(tiffpath), cv2.COLOR_BGR2GRAY)
     flattened = tiffBW.flatten()
-    # outlier_min, outlier_max = tools.get_outlier_boundaries(flattened)
-    # tiffBW[tiffBW < outlier_min] = 0
-    # tiffBW[tiffBW > outlier_max] = 0
-    tiffBW[tiffBW > np.mean(flattened) + 3 * np.std(flattened)] = 0
-    tiffBW = tiffBW / mean.astype(np.float64)
-    tiffBW = tiffBW.astype(np.uint8)
-    tiffBW *= 50 # testing normalization scaling
+    tiffBW[tiffBW < thresh] = 0;
+    if stddevs != -1:
+        tiffBW[tiffBW > np.mean(flattened) + stddevs * np.std(flattened)] = np.median(flattened)
+
+    tiffBW = (tiffBW / tiff_mean(normpath, thresh, stddevs, raw_norm).astype(np.float64)).astype(np.uint8) * 50
+
     savepath = os.path.join(out_dir, f"{'_'.join(tiffpath.split(os.path.sep)[-1].split('_')[:-1])}_norm_{os.path.dirname(normpath).split(os.path.sep)[-1]}_mean_{tiffZ}.tiff")
     cv2.imwrite(savepath, tiffBW)
     return savepath
 
 # Cell Normalizer Not Working Yet (more work needed with neural networks...)
-def cell_normalizer(tiff_list, norm_list, phalloidin_list, prototxt, model, threshold = 10, blur_matrix = (50, 50)):
+def cell_normalizer(tiff_list, norm_list, phalloidin_list, prototxt, model, threshold, blur_matrix = (50, 50)):
     tiff_dirname = os.path.dirname(tiff_list[0]).split(os.path.sep)[-1]
     norm_dirname = os.path.dirname(norm_list[0]).split(os.path.sep)[-1]
     phalloidin_dirname = os.path.dirname(phalloidin_list[0]).split(os.path.sep)[-1]
@@ -98,7 +99,6 @@ def cell_normalizer(tiff_list, norm_list, phalloidin_list, prototxt, model, thre
         lpfZ = lp_filtered.split('_')[-1].split('.')[0]
         savepath = os.path.join(cnn_canny_dir, f"{'_'.join(lp_filtered.split(os.path.sep)[-1].split('_')[:-1])}_CNN_canny_{lpfZ}.tiff")
         res = subprocess.run(['python', 'canny_cnn.py', '-i', lp_filtered, '-o', savepath, '-p', prototxt, '-m', model], shell = True, check = True)
-
 
 
 def lp_filter(phallpath, out_dir, matrix):

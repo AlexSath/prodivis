@@ -63,7 +63,7 @@ def get_files(folder):
             if root_name == "":
                 root_name = this_name
             elif this_name != root_name:
-                raise ValueError("Cannot confirm all images in folder are from the same stack. Ensure tiff filenames are all 'imgname_zX.tiff'")
+                raise ValueError(f"Cannot confirm all images in {folder} are from the same stack. Ensure tiff filenames are all 'imgname_zX.tiff'")
             if f.split('.')[-1] == 'tif' or f.split('.')[-1] == 'tiff':
                 tiffs.append(os.path.join(root, f))
     if not len(tiffs):
@@ -78,8 +78,8 @@ def get_files(folder):
 def min_max_scale(img):
     # std_max = np.nanmean(img) + 4 * np.nanstd(img)
     # img[img > std_max] = std_max
-    plt.hist(img.flatten())
-    plt.show()
+    # plt.hist(img.flatten())
+    # plt.show()
 
     np.seterr(all = 'raise')
 
@@ -92,9 +92,14 @@ def min_max_scale(img):
         img = np.ma.getdata(img)
     return img
 
+def gauss(x, mu, sigma, A):
+    out = x
+    for idx, inp in enumerate(x):
+        try:
+            out[idx] = A * np.exp(-(inp - mu)**2 / 2 / sigma**2)
+        except FloatingPointError:
+            out[idx] = 0
+    return out
 
-def get_outlier_boundaries(data):
-    q75, q25 = np.percentile(data, [75, 25])
-    iqr = q75 - q25
-    med = np.median(data)
-    return med - 1.5*iqr, med + 1.5*iqr
+def bimodal(x, mu1, s1, A1, mu2, s2, A2):
+    return gauss(x, mu1, s1, A1) + gauss(x, mu2, s2, A2)
