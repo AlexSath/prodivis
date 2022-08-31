@@ -1,6 +1,7 @@
 import os
 import tools
 import normalize
+import normalize_ignore_monolayer as normalizeIM
 import argparse
 import pandas as pd
 import numpy as np
@@ -18,13 +19,18 @@ def get_folders(rootdir, names, inverse):
                     dirs_found.append(os.path.join(root, d))
     return dirs_found
 
-def agg_means(dirs, threshold, stddev):
+def agg_means(dirs, threshold, stddev, ignore_monolayer):
     meandict = {}
     for idx, d in enumerate(dirs):
         tiffs = tools.get_files(d)
         these_means = []
-        for t in tiffs:
-            these_means.append(normalize.tiff_mean(t, threshold, stddev, 0))
+        if ignore_monolayer:
+            norm_bool = normalizeIM.get_norm_bool_idxs(tiffs, 0.75)
+            for t in tiffs:
+                these_means.append(normalizeIM.tiff_mean(t, norm_bool, threshold, stddev, 0))
+        else:
+            for t in tiffs:
+                these_means.append(normalize.tiff_mean(t, threshold, stddev, 0))
         key = d.split(os.path.sep)[-2]
         meandict[key] = these_means
     maximum = np.max([len(x) for x in meandict.values()])
@@ -61,6 +67,7 @@ def main():
     parser.add_argument('-o', '--output', help = 'Output directory for graphs')
     parser.add_argument('-t', '--threshold', help = 'Pixel threshold for normalized values', default = 0)
     parser.add_argument('-O', '--outlierHandling', help = "Pixels above '-O' standard deviations are not considered", default = -1)
+    parser.add_argument('-im', '--ignore-monolayer', nargs = '?', help = 'Add this option when tumor boundaries should be calculated to exclude monolayer signal in normalization slice means', default = False, const = True)
     args = parser.parse_args()
 
     threshold = tools.smart_check_int_param(args.threshold, 'threshold', 0, 50)
@@ -77,7 +84,7 @@ def main():
         data_df = pd.read_csv(rawdf_out)
     else:
         dirs = get_folders(args.rootdir, args.stacks, args.not_named)
-        data_df = agg_means(dirs, threshold, n_stddevs)
+        data_df = agg_means(dirs, threshold, n_stddevs, args.ignore_monolayer)
         data_df.to_csv(rawdf_out)
 
     analdf_out = dataout + "_anal.csv"

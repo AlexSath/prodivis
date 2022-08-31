@@ -71,6 +71,22 @@ def get_files(folder):
     return tiffs
 
 
+# Function: get_keyword_files()
+# Description: Gets all files with provided keyword in a folder.
+# Pre-Conditions: Path-like string to valid directory provided
+# Post-Conditions: Returns list of path-like objects to existing tiffs within dir.
+def get_keyword_files(folder, key):
+    filepaths = []
+    root_name = ""
+    for root, dirs, files in os.walk(folder):
+        for f in files:
+            if key in f:
+                filepaths.append(os.path.join(root, f))
+    if not len(filepaths):
+        raise ValueError(f"No files with keyword {key} found!")
+    return filepaths
+
+
 # Function: min_max_scale()
 # Description: Performs min-max scaling on img object (pixel array)
 # Pre-Conditions: Img object provided

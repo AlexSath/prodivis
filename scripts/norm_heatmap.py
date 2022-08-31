@@ -3,6 +3,7 @@ import cv2
 import matplotlib.pyplot as plt
 import tools
 import normalize
+import normalize_ignore_monolayer as normalizeIM
 import numpy as np
 import argparse
 import sys
@@ -132,6 +133,7 @@ def main():
     parser.add_argument('-Zs', '--zStart', help = 'The smallest z value to be used (counts up from 0)', default = 0)
     parser.add_argument('-Ze', '--zEnd', help = 'The largest z value to be used (cannot be higher than stack size)', default = -1)
     parser.add_argument('-v', '--view', nargs = '*', help = 'Which heatmaps to generate; choose from x, y, and z', default = ['z'])
+    parser.add_argument('-im', '--ignore-monolayer', nargs = '?', help = 'Add this option when tumor boundaries should be calculated to exclude monolayer signal in normalization slice means', default = False, const = True)
 
     '''Deprecated command-line arguments (some may make a return)'''
     # parser.add_argument('-a', '--algorithm', help = 'How heatmaps will be generated - 0 indicates stacking (for normal computers), 1 indicates matrices (10gb+ may be needed)', default = 0)
@@ -168,7 +170,10 @@ def main():
         raise ValueError('Program call must include "-n" with directory that contains the normalization stack')
     norms = tools.get_files(norm_dir)
 
-    tiffsM = normalize.mean_normalizer(tiffs, norms, threshold, n_stddevs, args.raw_normalization)
+    if not args.ignore_monolayer:
+        tiffsM = normalize.mean_normalizer(tiffs, norms, threshold, n_stddevs, args.raw_normalization)
+    else:
+        tiffsM = normalizeIM.mean_normalizer(tiffs, norms, threshold, n_stddevs, args.raw_normalization)
     # Prefix represents file prefix for generated heatmaps
     prefix = f'{stack_dir.split(os.path.sep)[-2]}_{stack_dir.split(os.path.sep)[-1]}' + \
              f"_{'n_' if not raw_norm else 'rn_'}{norm_dir.split(os.path.sep)[-1]}{'' if threshold == 0 else f'_t{threshold}'}" + \
