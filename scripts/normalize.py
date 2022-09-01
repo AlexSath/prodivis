@@ -38,7 +38,7 @@ def mean_normalizer(tiff_list, norm_list, threshold, outlier_stddevs, raw_norm, 
 
     dirname = f"{tiff_dirname}_{'n_' if not raw_norm else 'rn_'}" + \
               f"{'' if not ign_mono else 'im_'}{norm_dirname}" + \
-              {'' if threshold == 0 else f'_t{threshold}'}" + \
+              f"{'' if threshold == 0 else f'_t{threshold}'}" + \
               f"{'' if outlier_stddevs == -1 else f'_{outlier_stddevs}std'}"
 
     out_dir = os.path.abspath(os.path.join(os.path.dirname(tiff_list[0]), '..', dirname))
