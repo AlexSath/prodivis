@@ -11,6 +11,20 @@ def matrix_mean_normalizer(objective, normalization):
     print(z_means)
     sys.exit()
 
+
+def get_norm_bool_idxs(norm_slice_paths, bool_cutoff):
+    img1 = cv2.cvtColor(cv2.imread(norm_slice_paths[0]), cv2.COLOR_BGR2GRAY)
+    slice_bool_cumulative = np.empty(img1.shape, dtype = np.uint8)
+    for slice_path in norm_slice_paths:
+        norm_slice = cv2.cvtColor(cv2.imread(slice_path), cv2.COLOR_BGR2GRAY)
+        norm_slice[norm_slice > 0] = 1
+        slice_bool_cumulative = slice_bool_cumulative + norm_slice
+    final_cumulative = slice_bool_cumulative / len(norm_slice_paths)
+    bool_cumulative = final_cumulative
+    bool_cumulative[final_cumulative >= bool_cutoff] = 1
+    bool_cumulative[final_cumulative < bool_cutoff] = 0
+    return bool_cumulative
+
 # Function: threshold_normalize()
 # Description: Normalizes each tiff from the tiff_list by averaging the pixel
 #              intensity (if the pixel intensity is above the integer threshold)
@@ -18,12 +32,15 @@ def matrix_mean_normalizer(objective, normalization):
 # Pre-Conditions: List of path-like strings for tiff and norm, integer threshold
 # Post-Conditions: New directory filled with normalized tiffs created. Returned
 #                  list of path-like strings to generated normalized tiffs.
-def mean_normalizer(tiff_list, norm_list, threshold, outlier_stddevs, raw_norm):
+def mean_normalizer(tiff_list, norm_list, threshold, outlier_stddevs, raw_norm, ign_mono, ign_thresh = 0.7):
     tiff_dirname = os.path.dirname(tiff_list[0]).split(os.path.sep)[-1]
     norm_dirname = os.path.dirname(norm_list[0]).split(os.path.sep)[-1]
 
-    dirname = f"{tiff_dirname}_{'n_' if not raw_norm else 'rn_'}{norm_dirname}" + \
-              f"{'' if threshold == 0 else f'_t{threshold}'}{'' if outlier_stddevs == -1 else f'_{outlier_stddevs}std'}"
+    dirname = f"{tiff_dirname}_{'n_' if not raw_norm else 'rn_'}" + \
+              f"{'' if not ign_mono else 'im_'}{norm_dirname}" + \
+              {'' if threshold == 0 else f'_t{threshold}'}" + \
+              f"{'' if outlier_stddevs == -1 else f'_{outlier_stddevs}std'}"
+
     out_dir = os.path.abspath(os.path.join(os.path.dirname(tiff_list[0]), '..', dirname))
     if not os.path.isdir(out_dir):
         os.mkdir(out_dir)
@@ -32,29 +49,37 @@ def mean_normalizer(tiff_list, norm_list, threshold, outlier_stddevs, raw_norm):
         if not use_temp:
             return tools.get_files(out_dir)
 
+    if ign_mono:
+        norm_bool = get_norm_bool_idxs(norm_list, ign_thresh)
+
     print(f"\nCreating normalized tiffs in {out_dir}.")
     norm_tiffs = []
     count = 1
     for tiff, norm in zip(np.sort(tiff_list), np.sort(norm_list)):
         print(f"Normalizing {tiff_dirname} using {norm_dirname} ({count}/{len(tiff_list)})...", end = '\n')
-        norm_tiffs.append(mean_normalize(tiff, norm, out_dir, threshold, outlier_stddevs, raw_norm))
+        if ign_mono:
+            norm_tiffs.append(mean_normalize(tiff, norm, out_dir, threshold, outlier_stddevs, raw_norm, norm_bool))
+        else:
+            norm_tiffs.append(mean_normalize(tiff, norm, out_dir, threshold, outlier_stddevs, raw_norm))
         count += 1
     print('')
 
     return norm_tiffs
 
 
-def tiff_mean(normpath, thresh, stddevs, raw_norm):
+def tiff_mean(normpath, thresh, stddevs, raw_norm, norm_bool):
     normBW = cv2.cvtColor(cv2.imread(normpath), cv2.COLOR_BGR2GRAY)
-    normBW = normBW.flatten().astype(float)
+    normBW = normBW.astype(float)
+    if type(norm_bool) != int:
+        normBW[norm_bool == 0] = np.nan
     if not raw_norm:
         normBW[normBW < thresh] = np.nan
         if stddevs != -1:
             normBW[normBW > np.mean(normBW) + stddevs * np.std(normBW)] = np.nan
-    return np.nanmean(normBW)
+    return np.nanmean(normBW.flatten())
 
 
-def mean_normalize(tiffpath, normpath, out_dir, thresh, stddevs, raw_norm):
+def mean_normalize(tiffpath, normpath, out_dir, thresh, stddevs, raw_norm, norm_bool = 0):
     tiffZ = tiffpath.split('_')[-1].split('.')[0]
     normZ = normpath.split('_')[-1].split('.')[0]
     if tiffZ != normZ:
@@ -66,9 +91,11 @@ def mean_normalize(tiffpath, normpath, out_dir, thresh, stddevs, raw_norm):
     if stddevs != -1:
         tiffBW[tiffBW > np.mean(flattened) + stddevs * np.std(flattened)] = np.median(flattened)
 
-    tiffBW = (tiffBW / tiff_mean(normpath, thresh, stddevs, raw_norm).astype(np.float64)).astype(np.uint8) * 50
+    tiffBW = (tiffBW / tiff_mean(normpath, thresh, stddevs, raw_norm, norm_bool).astype(np.float64)).astype(np.uint8) * 50
 
-    savepath = os.path.join(out_dir, f"{'_'.join(tiffpath.split(os.path.sep)[-1].split('_')[:-1])}_norm_{os.path.dirname(normpath).split(os.path.sep)[-1]}_mean_{tiffZ}.tiff")
+    savepath = os.path.join(out_dir, f"{'_'.join(tiffpath.split(os.path.sep)[-1].split('_')[:-1])}" + \
+                                     f"_{'n_' if not raw_norm else 'rn_'}{'' if type(norm_bool) == int else 'im_'}" + \
+                                     f"{os.path.dirname(normpath).split(os.path.sep)[-1]}_mean_{tiffZ}.tiff")
     cv2.imwrite(savepath, tiffBW)
     return savepath
 

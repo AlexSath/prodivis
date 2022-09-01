@@ -3,7 +3,6 @@ import cv2
 import matplotlib.pyplot as plt
 import tools
 import normalize
-import normalize_ignore_monolayer as normalizeIM
 import numpy as np
 import argparse
 import sys
@@ -170,13 +169,12 @@ def main():
         raise ValueError('Program call must include "-n" with directory that contains the normalization stack')
     norms = tools.get_files(norm_dir)
 
-    if not args.ignore_monolayer:
-        tiffsM = normalize.mean_normalizer(tiffs, norms, threshold, n_stddevs, args.raw_normalization)
-    else:
-        tiffsM = normalizeIM.mean_normalizer(tiffs, norms, threshold, n_stddevs, args.raw_normalization)
+    tiffsM = normalize.mean_normalizer(tiffs, norms, threshold, n_stddevs, args.raw_normalization, args.ignore_monolayer)
+
     # Prefix represents file prefix for generated heatmaps
     prefix = f'{stack_dir.split(os.path.sep)[-2]}_{stack_dir.split(os.path.sep)[-1]}' + \
-             f"_{'n_' if not raw_norm else 'rn_'}{norm_dir.split(os.path.sep)[-1]}{'' if threshold == 0 else f'_t{threshold}'}" + \
+             f"_{'n_' if not raw_norm else 'rn_'}{'' if not args.ignore_monolayer else 'im_'}" + \
+             f"{norm_dir.split(os.path.sep)[-1]}{'' if threshold == 0 else f'_t{threshold}'}" + \
              f"{'' if n_stddevs == -1 else f'_{n_stddevs}std'}_z{z_min}-{z_max}"
 
 

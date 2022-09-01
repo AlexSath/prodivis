@@ -6,6 +6,7 @@ no_peripheral_DL_images/data/
 no_peripheral_DL_images/exp_specific/
 no_peripheral_paper_hmp/
 ye_old_paper_hmp/
+test/
 *.swp
 *~
 .gitignore
