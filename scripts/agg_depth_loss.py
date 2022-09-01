@@ -19,13 +19,13 @@ def get_folders(rootdir, names, inverse):
                     dirs_found.append(os.path.join(root, d))
     return dirs_found
 
-def agg_means(dirs, threshold, stddev, ignore_monolayer):
+def agg_means(dirs, threshold, stddev, ignore_monolayer, cutoff = 0.75):
     meandict = {}
     for idx, d in enumerate(dirs):
         tiffs = tools.get_files(d)
         these_means = []
         if ignore_monolayer:
-            norm_bool = normalizeIM.get_norm_bool_idxs(tiffs, 0.75)
+            norm_bool = normalizeIM.get_norm_bool_idxs(tiffs, cutoff)
             for t in tiffs:
                 these_means.append(normalizeIM.tiff_mean(t, norm_bool, threshold, stddev, 0))
         else:
@@ -68,6 +68,7 @@ def main():
     parser.add_argument('-t', '--threshold', help = 'Pixel threshold for normalized values', default = 0)
     parser.add_argument('-O', '--outlierHandling', help = "Pixels above '-O' standard deviations are not considered", default = -1)
     parser.add_argument('-im', '--ignore-monolayer', nargs = '?', help = 'Add this option when tumor boundaries should be calculated to exclude monolayer signal in normalization slice means', default = False, const = True)
+    # parser.add_argument('-imc', '--ignore-monolayer', help =
     args = parser.parse_args()
 
     threshold = tools.smart_check_int_param(args.threshold, 'threshold', 0, 50)
@@ -84,7 +85,7 @@ def main():
         data_df = pd.read_csv(rawdf_out)
     else:
         dirs = get_folders(args.rootdir, args.stacks, args.not_named)
-        data_df = agg_means(dirs, threshold, n_stddevs, args.ignore_monolayer)
+        data_df = agg_means(dirs, threshold, n_stddevs, args.ignore_monolayer, 0.60)
         data_df.to_csv(rawdf_out)
 
     analdf_out = dataout + "_anal.csv"

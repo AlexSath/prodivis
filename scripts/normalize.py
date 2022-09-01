@@ -35,7 +35,7 @@ def mean_normalizer(tiff_list, norm_list, threshold, outlier_stddevs, raw_norm):
     print(f"\nCreating normalized tiffs in {out_dir}.")
     norm_tiffs = []
     count = 1
-    for tiff, norm in zip(tiff_list, norm_list):
+    for tiff, norm in zip(np.sort(tiff_list), np.sort(norm_list)):
         print(f"Normalizing {tiff_dirname} using {norm_dirname} ({count}/{len(tiff_list)})...", end = '\n')
         norm_tiffs.append(mean_normalize(tiff, norm, out_dir, threshold, outlier_stddevs, raw_norm))
         count += 1
