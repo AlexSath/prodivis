@@ -1,7 +1,6 @@
 import os
 import tools
 import normalize
-import normalize_ignore_monolayer as normalizeIM
 import argparse
 import pandas as pd
 import numpy as np
@@ -24,13 +23,9 @@ def agg_means(dirs, threshold, stddev, ignore_monolayer, cutoff = 0.75):
     for idx, d in enumerate(dirs):
         tiffs = tools.get_files(d)
         these_means = []
-        if ignore_monolayer:
-            norm_bool = normalizeIM.get_norm_bool_idxs(tiffs, cutoff)
-            for t in tiffs:
-                these_means.append(normalizeIM.tiff_mean(t, norm_bool, threshold, stddev, 0))
-        else:
-            for t in tiffs:
-                these_means.append(normalize.tiff_mean(t, threshold, stddev, 0))
+        norm_bool = 0 if not ignore_monolayer else normalize.get_norm_bool_idxs(tiffs, cutoff)
+        for t in tiffs:
+            these_means.append(normalize.tiff_mean(t, norm_bool, threshold, stddev, norm_bool))
         key = d.split(os.path.sep)[-2]
         meandict[key] = these_means
     maximum = np.max([len(x) for x in meandict.values()])
