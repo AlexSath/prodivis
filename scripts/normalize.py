@@ -69,7 +69,6 @@ def mean_normalizer(tiff_list, norm_list, threshold, outlier_stddevs, raw_norm, 
 
     return norm_tiffs
 
-
 def tiff_mean(normpath, thresh, stddevs, raw_norm, norm_bool):
     normBW = cv2.cvtColor(cv2.imread(normpath), cv2.COLOR_BGR2GRAY)
     normBW = normBW.astype(float)
@@ -81,6 +80,30 @@ def tiff_mean(normpath, thresh, stddevs, raw_norm, norm_bool):
         if stddevs != -1:
             normBW[normBW > np.mean(normBW) + stddevs * np.std(normBW)] = np.nan
     return np.nanmean(normBW.flatten())
+
+def tiff_mean_std(normpath, thresh, stddevs, raw_norm, norm_bool):
+    normBW = cv2.cvtColor(cv2.imread(normpath), cv2.COLOR_BGR2GRAY)
+    normBW = normBW.astype(float)
+    if type(norm_bool) != int:
+        normBW[norm_bool == 0] = np.nan
+    normBW[normBW == 0] = np.nan
+    if not raw_norm:
+        normBW[normBW < thresh] = np.nan
+        if stddevs != -1:
+            normBW[normBW > np.mean(normBW) + stddevs * np.std(normBW)] = np.nan
+    return np.nanmean(normBW.flatten()), np.nanstd(normBW.flatten())
+
+def tiff_mean_std(normpath, thresh, stddevs, raw_norm, norm_bool):
+    normBW = cv2.cvtColor(cv2.imread(normpath), cv2.COLOR_BGR2GRAY)
+    normBW = normBW.astype(float)
+    if type(norm_bool) != int:
+        normBW[norm_bool == 0] = np.nan
+    normBW[normBW == 0] = np.nan
+    if not raw_norm:
+        normBW[normBW < thresh] = np.nan
+        if stddevs != -1:
+            normBW[normBW > np.mean(normBW) + stddevs * np.std(normBW)] = np.nan
+    return np.nanmean(normBW.flatten()), np.nanstd(normBW.flatten())
 
 
 def mean_normalize(tiffpath, normpath, out_dir, thresh, stddevs, raw_norm, len_log, norm_bool = 0):

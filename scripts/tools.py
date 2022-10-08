@@ -68,6 +68,7 @@ def get_files(folder):
                 tiffs.append(os.path.join(root, f))
     if not len(tiffs):
         raise ValueError("No tiffs found!")
+    tiffs.sort()
     return tiffs
 
 
@@ -84,6 +85,7 @@ def get_keyword_files(folder, key):
                 filepaths.append(os.path.join(root, f))
     if not len(filepaths):
         raise ValueError(f"No files with keyword {key} found!")
+    filepaths.sort()
     return filepaths
 
 
