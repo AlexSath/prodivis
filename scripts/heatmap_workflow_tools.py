@@ -4,18 +4,24 @@ import math
 
 def process_zmin_zmax(zmin, zmax, tiffs):
     zmin_out, zmax_out = zmin, zmax
-    if zmin <= zmax - 2:
+    if zmin == None:
+        zmin_out = 0
+    if zmax == None:
+        zmax_out = len(tiffs)
+    if zmin != None and zmax != None and zmin <= zmax - 2:
         raise ValueError(f"ZMin {zmin} must be 2 smaller than ZMax {zmax}")
-    if zmin >= 0:
-        if type(zmin) == float:
-            zmin_out = math.floor(zmin * len(tiffs))
-    else:
-        raise ValueError(f"ZMin {zmin} must be greater than or equal to 0!")
-    if zmax <= len(tiffs):
-        if type(zmax) == float or (zmax == 1 and type(zmin) == float):
-            zmax_out = math.ceil(zmax * len(tiffs))
-    else:
-        raise ValueError(f"ZMax {zmax} must be less than or equal to {len(tiffs)} (the stack's size)")
+    if zmin != None:
+        if zmin >= 0:
+            if type(zmin) == float:
+                zmin_out = math.floor(zmin * len(tiffs))
+        else:
+            raise ValueError(f"ZMin {zmin} must be greater than or equal to 0!")
+    if zmax != None:
+        if zmax <= len(tiffs):
+            if type(zmax) == float or (zmax == 1 and type(zmin) == float):
+                zmax_out = math.ceil(zmax * len(tiffs))
+        else:
+            raise ValueError(f"ZMax {zmax} must be less than or equal to {len(tiffs)} (the stack's size)")
     return zmin_out, zmax_out
 
 def plot_MSI(means, stds, depth, title, savepath):
