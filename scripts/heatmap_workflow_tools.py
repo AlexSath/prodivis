@@ -8,6 +8,7 @@ def plot_MSI(means, stds, depth, title, savepath):
     ax = plt.gca()
     ymax = ax.get_ylim()[1]
     ax.set_ylim((0, ymax))
+    # ax.set_xlim(0, np.max(len(means) * depth))
     plt.title(title)
     plt.xlabel("Slice Depth (um)")
     plt.ylabel("Intensity (% max)")
