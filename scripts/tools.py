@@ -21,6 +21,11 @@ def get_int_input(prompt, min, max):
         else:
             return answer
 
+
+# Function:
+# Description:
+# Pre-Conditions:
+# Post-Conditions:
 def smart_check_int_param(param_value, param_name, min_val, max_val):
     try:
         param_value = int(param_value)
@@ -31,11 +36,19 @@ def smart_check_int_param(param_value, param_name, min_val, max_val):
     return param_value
 
 
+# Function:
+# Description:
+# Pre-Conditions:
+# Post-Conditions:
 def smart_make_dir(dirpath):
     if not os.path.isdir(dirpath):
         os.mkdir(dirpath)
 
 
+# Function: 
+# Description:
+# Pre-Conditions:
+# Post-Conditions:
 def norm_dirname(dirpath, dirtype, create = False):
     if dirpath == 0:
         return dirpath
@@ -94,11 +107,6 @@ def get_keyword_files(folder, key):
 # Pre-Conditions: Img object provided
 # Post-Conditions: Return img object with pixels min-max scaled.
 def min_max_scale(img):
-    # std_max = np.nanmean(img) + 4 * np.nanstd(img)
-    # img[img > std_max] = std_max
-    # plt.hist(img.flatten())
-    # plt.show()
-
     np.seterr(all = 'raise')
 
     minimum = img.min()
@@ -109,15 +117,3 @@ def min_max_scale(img):
     if isinstance(img, np.ma.MaskedArray):
         img = np.ma.getdata(img)
     return img
-
-def gauss(x, mu, sigma, A):
-    out = x
-    for idx, inp in enumerate(x):
-        try:
-            out[idx] = A * np.exp(-(inp - mu)**2 / 2 / sigma**2)
-        except FloatingPointError:
-            out[idx] = 0
-    return out
-
-def bimodal(x, mu1, s1, A1, mu2, s2, A2):
-    return gauss(x, mu1, s1, A1) + gauss(x, mu2, s2, A2)

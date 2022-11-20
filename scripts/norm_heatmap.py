@@ -12,39 +12,10 @@ import warnings
 Filename: norm_heatmap.py
 Author: Alexandre R. Sathler
 Date: 05/04/2022
-Description: Primary interface file users interact with for heatmap production.
+Description: Command-line interface for heatmap creation
 Main function handles command line arguments, normalization, and production /
 output of heatmaps.
 """
-
-def create_matrix(tiff_list):
-    l = []
-    for tiff in tiff_list:
-        l.append(cv2.cvtColor(cv2.imread(tiff), cv2.COLOR_BGR2GRAY))
-    l = np.asarray(l, float)
-    return l
-
-def mult_view(img, z_mult):
-    out = []
-    for row in img:
-        out.extend(np.tile(row, (z_mult,1)))
-    out = np.asarray(out)
-    return out
-
-def matrix_stack(tiff_list, viewpoints, z_mult):
-    print(f"Loading data into matrix...")
-    A = create_matrix(tiff_list)
-    img_list = []
-    for viewpoint in viewpoints:
-        print(f"Generating heatmap for viewpoint {viewpoint}")
-        if viewpoint == 'z':
-            img_list.append(tools.min_max_scale(np.nanmean(A, axis = 0)))
-        elif viewpoint == 'y':
-            img_list.append(tools.min_max_scale(mult_view(np.nanmean(A, axis = 1), z_mult)))
-        elif viewpoint == 'x':
-            img_list.append(tools.min_max_scale(mult_view(np.nanmean(A, axis = 2), z_mult)))
-    return img_list
-
 
 
 # Function: stack()
@@ -105,7 +76,22 @@ def stack(tiff_list, viewpoints, z_mult, norm = False):
     return img_list
 
 
+# Function:
+# Description:
+# Pre-Conditions:
+# Post-Conditions:
+def mult_view(img, z_mult):
+    out = []
+    for row in img:
+        out.extend(np.tile(row, (z_mult,1)))
+    out = np.asarray(out)
+    return out
 
+
+# Function:
+# Description:
+# Pre-Conditions:
+# Post-Conditions:
 def save_heatmaps(out_dir, prefix, viewpoints, out):
     # Using matplotlib to generate a heatmap for every image object generated.
     for v, o in zip(viewpoints, out):
@@ -132,9 +118,9 @@ def main():
     parser.add_argument('-Zs', '--zStart', help = 'The smallest z value to be used (counts up from 0)', default = 0)
     parser.add_argument('-Ze', '--zEnd', help = 'The largest z value to be used (cannot be higher than stack size)', default = -1)
     parser.add_argument('-v', '--view', nargs = '*', help = 'Which heatmaps to generate; choose from x, y, and z', default = ['z'])
-    parser.add_argument('-im', '--ignore-monolayer', nargs = '?', help = 'Add this option when tumor boundaries should be calculated to exclude monolayer signal in normalization slice means', default = False, const = True)
 
     '''Deprecated command-line arguments (some may make a return)'''
+    # parser.add_argument('-im', '--ignore-monolayer', nargs = '?', help = 'Add this option when tumor boundaries should be calculated to exclude monolayer signal in normalization slice means', default = False, const = True)
     # parser.add_argument('-a', '--algorithm', help = 'How heatmaps will be generated - 0 indicates stacking (for normal computers), 1 indicates matrices (10gb+ may be needed)', default = 0)
     # parser.add_argument('-V', '--visualization', nargs = '*', help = 'Indicates what type of visualization should be generated. "m" for mean heatmap. "c" for cell boundary heatmap. "v" for 3D visualization', default = [])
     # parser.add_argument('-b', '--cellBoundary', help = "Directory with cell boundary stack, typically a Phalloidin stain. REQUIRED with '-V'", default = 0)
@@ -156,6 +142,7 @@ def main():
     raw_norm = args.raw_normalization
     threshold = tools.smart_check_int_param(args.threshold, 'threshold', 0, 50)
     n_stddevs = -1 if args.outlierHandling == -1 else tools.smart_check_int_param(args.outlierHandling, 'number of standard deviations', 1, 7)
+    # ign_mono = args.ignore_monolayer
     # algorithm = tools.smart_check_int_param(args.algorithm, 'algorithm', 0, 1)
 
     # Getting all tiffs from the stack directory
@@ -169,7 +156,7 @@ def main():
         raise ValueError('Program call must include "-n" with directory that contains the normalization stack')
     norms = tools.get_files(norm_dir)
 
-    tiffsM = normalize.mean_normalizer(tiffs, norms, threshold, n_stddevs, args.raw_normalization, args.ignore_monolayer)
+    tiffsM = normalize.mean_normalizer(tiffs, norms, threshold, n_stddevs, raw_norm, ig_mon)
 
     # Prefix represents file prefix for generated heatmaps
     prefix = f'{stack_dir.split(os.path.sep)[-2]}_{stack_dir.split(os.path.sep)[-1]}' + \
@@ -185,6 +172,7 @@ def main():
         os.mkdir(out_dir)
     out_dir = os.path.join(out_dir, prefix)
     tools.smart_make_dir(out_dir)
+
     # Getting list of output heatmap image objects (pixel arrays)
     # if algorithm == 1:
     #     out = matrix_stack(tiffsM[z_min:z_max], viewpoints, z_multiplier)

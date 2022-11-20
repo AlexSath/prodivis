@@ -1,8 +1,14 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import math
-from matplotlib.gridspec import GridSpec 
+from matplotlib.gridspec import GridSpec
 
+
+
+# Function:
+# Description:
+# Pre-Conditions:
+# Post-Conditions:
 def process_zmin_zmax(zmin, zmax, tiffs):
     zmin_out, zmax_out = zmin, zmax
     if zmin == None:
@@ -25,6 +31,11 @@ def process_zmin_zmax(zmin, zmax, tiffs):
             raise ValueError(f"ZMax {zmax} must be less than or equal to {len(tiffs)} (the stack's size)")
     return zmin_out, zmax_out
 
+
+# Function:
+# Description:
+# Pre-Conditions:
+# Post-Conditions:
 def plot_MSI(means, depth, title, savepath, save_figs):
     means = means / means.max() * 100
     plt.plot(np.arange(0, len(means)) * depth, means, color = "#636363", linewidth = 3, label = "Mean")
@@ -41,8 +52,13 @@ def plot_MSI(means, depth, title, savepath, save_figs):
     if save_figs:
         plt.savefig(savepath, format = "pdf")
         print("figure saved")
-plt.show()
+    plt.show()
 
+
+# Function:
+# Description:
+# Pre-Conditions:
+# Post-Conditions:
 def plot_MSI_grouped(means_soi, means_ns, means_soi_ns, depth, title, savepath, save_figs):
     means_soi = means_soi/means_soi.max() *100
     means_ns = means_ns/means_ns.max() *100
@@ -63,8 +79,13 @@ def plot_MSI_grouped(means_soi, means_ns, means_soi_ns, depth, title, savepath, 
     if save_figs:
         plt.savefig(savepath, format = "pdf")
         print("figure saved")
-plt.show()
+    plt.show()
 
+
+# Function:
+# Description:
+# Pre-Conditions:
+# Post-Conditions:
 def plot_MSI_soi_ns(soi, ns, means_soi, means_ns, depth, title, savepath, save_figs):
     means_soi = means_soi/means_soi.max() *100
     means_ns = means_ns/means_ns.max() *100
@@ -83,13 +104,23 @@ def plot_MSI_soi_ns(soi, ns, means_soi, means_ns, depth, title, savepath, save_f
     if save_figs:
         plt.savefig(savepath, format = "pdf")
         print("figure saved")
-plt.show()
+    plt.show()
 
+
+# Function:
+# Description:
+# Pre-Conditions:
+# Post-Conditions:
 def format_axes(fig):
     for i, ax in enumerate(fig.axes):
         ax.text(0.5, 0.5, "ax%d" % (i+1), va="center", ha="center")
         ax.tick_params(labelbottom=False, labelleft=False)
 
+
+# Function:
+# Description:
+# Pre-Conditions:
+# Post-Conditions:
 def plot_MIP(imgs, title_base, savepath, save_figs):
     fig = plt.figure(constrained_layout=True)
     gs = GridSpec(4, 3, figure=fig)
