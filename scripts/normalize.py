@@ -81,30 +81,15 @@ def tiff_mean(normpath, thresh, stddevs, raw_norm, norm_bool):
             normBW[normBW > np.mean(normBW) + stddevs * np.std(normBW)] = np.nan
     return np.nanmean(normBW.flatten())
 
-def tiff_mean_std(normpath, thresh, stddevs, raw_norm, norm_bool):
+def tiff_stats_thresh(normpath, lower, upper, norm_bool):
     normBW = cv2.cvtColor(cv2.imread(normpath), cv2.COLOR_BGR2GRAY)
     normBW = normBW.astype(float)
     if type(norm_bool) != int:
         normBW[norm_bool == 0] = np.nan
     normBW[normBW == 0] = np.nan
-    if not raw_norm:
-        normBW[normBW < thresh] = np.nan
-        if stddevs != -1:
-            normBW[normBW > np.mean(normBW) + stddevs * np.std(normBW)] = np.nan
-    return np.nanmean(normBW.flatten()), np.nanstd(normBW.flatten())
-
-def tiff_mean_std(normpath, thresh, stddevs, raw_norm, norm_bool):
-    normBW = cv2.cvtColor(cv2.imread(normpath), cv2.COLOR_BGR2GRAY)
-    normBW = normBW.astype(float)
-    if type(norm_bool) != int:
-        normBW[norm_bool == 0] = np.nan
-    normBW[normBW == 0] = np.nan
-    if not raw_norm:
-        normBW[normBW < thresh] = np.nan
-        if stddevs != -1:
-            normBW[normBW > np.mean(normBW) + stddevs * np.std(normBW)] = np.nan
-    return np.nanmean(normBW.flatten()), np.nanstd(normBW.flatten())
-
+    normBW[normBW < lower] = np.nan
+    normBW[normBW > upper] = np.nan
+    return np.nanmean(normBW.flatten()) 
 
 def mean_normalize(tiffpath, normpath, out_dir, thresh, stddevs, raw_norm, len_log, norm_bool = 0):
     tiffZ = int(''.join(re.findall("[0-9]+", tiffpath.split(os.path.sep)[-1]))[-1 * len_log:])
@@ -125,6 +110,8 @@ def mean_normalize(tiffpath, normpath, out_dir, thresh, stddevs, raw_norm, len_l
                                      f"{os.path.dirname(normpath).split(os.path.sep)[-1]}_mean_{tiffZ}.tiff")
     cv2.imwrite(savepath, tiffBW)
     return savepath
+
+
 
 # Cell Normalizer Not Working Yet (more work needed with neural networks...)
 def cell_normalizer(tiff_list, norm_list, phalloidin_list, prototxt, model, threshold, blur_matrix = (50, 50)):
