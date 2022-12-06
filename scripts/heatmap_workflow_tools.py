@@ -46,7 +46,7 @@ def plot_MSI(means, depth, title, savepath, save_figs):
     plt.title(title)
     xmin, xmax = ax.get_xlim()
     ax.set_xlim((0, xmax - 2))
-    plt.xlabel("Slice Depth (um)")
+    plt.xlabel("Slice Depth (\u03BCm)")
     plt.ylabel("Pixel Intensity (% max)")
     plt.legend(loc="lower left")
     if save_figs:
@@ -73,7 +73,7 @@ def plot_MSI_grouped(means_soi, means_ns, means_soi_ns, depth, title, savepath, 
     plt.title(title)
     xmin, xmax = ax.get_xlim()
     ax.set_xlim((0, xmax - 2))
-    plt.xlabel("Slice Depth (um)")
+    plt.xlabel("Slice Depth (\u03BCm)")
     plt.ylabel("Pixel Intensity (% max)")
     plt.legend(loc="lower left")
     if save_figs:
@@ -98,7 +98,7 @@ def plot_MSI_soi_ns(soi, ns, means_soi, means_ns, depth, title, savepath, save_f
     plt.title(title)
     xmin, xmax = ax.get_xlim()
     ax.set_xlim((0, xmax - 2))
-    plt.xlabel("Slice Depth (um)")
+    plt.xlabel("Slice Depth (\u03BCm)")
     plt.ylabel("Pixel Intensity (% max)")
     plt.legend(loc="lower left")
     if save_figs:

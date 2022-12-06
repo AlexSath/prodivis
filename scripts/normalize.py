@@ -117,7 +117,7 @@ def mean_normalize(tiffpath, normpath, out_dir, thresh, stddevs, raw_norm, len_l
     if stddevs != -1:
         tiffBW[tiffBW > np.mean(flattened) + stddevs * np.std(flattened)] = np.median(flattened)
 
-    tiffBW = (tiffBW / tiff_mean(normpath, thresh, stddevs, raw_norm, norm_bool).astype(np.float64)).astype(np.uint8) * 50
+    tiffBW = (tiffBW / tiff_mean(normpath, thresh, stddevs, raw_norm, norm_bool).astype(np.float64)).astype(np.uint8)
 
     savepath = os.path.join(out_dir, f"{os.path.basename(os.path.dirname(tiffpath))}" + \
                                      f"_{'n_' if not raw_norm else 'rn_'}{'' if type(norm_bool) == int else 'im_'}" + \
