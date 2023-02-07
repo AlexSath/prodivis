@@ -7,6 +7,7 @@ import sys
 from scipy.optimize import curve_fit
 from matplotlib import pyplot as plt
 import math
+from builtins import len
 
 
 # Function:
@@ -56,7 +57,8 @@ def mean_normalizer(tiff_list, norm_list, threshold, outlier_stddevs, raw_norm, 
     print(f"\nCreating normalized tiffs in {out_dir}.")
     norm_tiffs = []
     count = 1
-    log_10s = math.floor(math.log(len(tiff_list), 10)) + 1
+    log_10s = math.floor(math.log(len(tiff_list), 10)) + 14
+
     for tiff, norm in zip(np.sort(tiff_list), np.sort(norm_list)):
         print(f"Normalizing {tiff_dirname} using {norm_dirname} ({count}/{len(tiff_list)})...", end = '\n')
         if ign_mono:
@@ -64,6 +66,9 @@ def mean_normalizer(tiff_list, norm_list, threshold, outlier_stddevs, raw_norm, 
         else:
             norm_tiffs.append(mean_normalize(tiff, norm, out_dir, threshold, outlier_stddevs, raw_norm, log_10s))
         count += 1
+    
+        #if scale:
+            #scale_tiffs(norm_tiffs)
     print('')
 
     return norm_tiffs
@@ -90,6 +95,21 @@ def tiff_mean(normpath, thresh, stddevs, raw_norm, norm_bool):
 # Description:
 # Pre-Conditions:
 # Post-Conditions:
+def tiff_dist(normpath, lower, upper, norm_bool):
+    normBW = cv2.cvtColor(cv2.imread(normpath), cv2.COLOR_BGR2GRAY)
+    normBW = normBW.astype(float)
+    if type(norm_bool) != int:
+        normBW[norm_bool == 0] = np.nan
+    normBW[normBW == 0] = np.nan
+    normBW[normBW < lower] = np.nan
+    normBW[normBW > upper] = np.nan
+    return np.nanmean(normBW.flatten()), np.nanmedian(normBW.flatten()), np.nanmax(normBW.flatten()), np.nanmin(normBW.flatten()), np.nanvar(normBW.flatten())
+
+
+# Function:
+# Description:
+# Pre-Conditions:
+# Post-Conditions:
 def tiff_stats_thresh(normpath, lower, upper, norm_bool):
     normBW = cv2.cvtColor(cv2.imread(normpath), cv2.COLOR_BGR2GRAY)
     normBW = normBW.astype(float)
@@ -101,6 +121,50 @@ def tiff_stats_thresh(normpath, lower, upper, norm_bool):
     return np.nanmean(normBW.flatten())
 
 
+def thresh(normpath, lower, upper, norm_bool):
+    normBW = cv2.cvtColor(cv2.imread(normpath), cv2.COLOR_BGR2GRAY)
+    normBW = normBW.astype(float)
+    if type(norm_bool) != int:
+        normBW[norm_bool == 0] = np.nan
+    normBW[normBW == 0] = np.nan
+    normBW[normBW < lower] = np.nan
+    normBW[normBW > upper] = np.nan
+    flattened = normBW[np.logical_not(np.isnan(normBW))].flatten()
+    return flattened
+
+def thresh_multiply(normpath, norm_bool):
+    normBW = cv2.cvtColor(cv2.imread(normpath), cv2.COLOR_BGR2GRAY)
+    normBW = normBW.astype(float)
+    if type(norm_bool) != int:
+        normBW[norm_bool == 0] = np.nan
+    normBW[normBW == 0] = np.nan
+    return np.array(normBW.flatten())
+
+
+def analyze_images(directory, threshold):
+    below_threshold = []
+    for image in os.listdir(directory):
+        path = os.path.join(directory, image)
+        img = cv2.imread(path, 0)
+        img = img.astype(float)
+        img[img < threshold] = np.nan
+        if np.isnan(img).all():
+            below_threshold.append(image)
+    return below_threshold
+
+
+def images_used(img_list, norm_tiffs, stack_tiffs):
+    img_list.sort()
+    print("number of images below threshold = ",len(img_list))
+    print("number of images in stack = ", len(norm_tiffs))
+    if len(norm_tiffs) == len(stack_tiffs):
+        if len(img_list) == len(norm_tiffs):
+            print("all images are below threshold")
+        if len(img_list) < len(norm_tiffs):
+            print("% of images above threshold = ", (len(norm_tiffs)-len(img_list))/len(norm_tiffs) *100)
+    else: print("number of images in NS and SOI stack are not equal")
+    return img_list
+
 # Function:
 # Description:
 # Pre-Conditions:
@@ -108,19 +172,32 @@ def tiff_stats_thresh(normpath, lower, upper, norm_bool):
 def mean_normalize(tiffpath, normpath, out_dir, thresh, stddevs, raw_norm, len_log, norm_bool = 0):
     tiffZ = int(''.join(re.findall("[0-9]+", tiffpath.split(os.path.sep)[-1]))[-1 * len_log:])
     normZ = int(''.join(re.findall("[0-9]+", normpath.split(os.path.sep)[-1]))[-1 * len_log:])
+    #"tiff_ZXXX"
     if tiffZ != normZ:
         raise ValueError(f"Z-value for reference tiff ({tiffZ}) is not equal to Z-value for normalization tiff ({normZ})")
 
     tiffBW = cv2.cvtColor(cv2.imread(tiffpath), cv2.COLOR_BGR2GRAY)
-    flattened = tiffBW.flatten()
-    tiffBW[tiffBW < thresh] = 0;
-    if stddevs != -1:
-        tiffBW[tiffBW > np.mean(flattened) + stddevs * np.std(flattened)] = np.median(flattened)
-
+    tiffBW[tiffBW < thresh] = 0
+    tiffBW[tiffBW > stddevs] = 0
     tiffBW = (tiffBW / tiff_mean(normpath, thresh, stddevs, raw_norm, norm_bool).astype(np.float64)).astype(np.uint8)
-
+    
     savepath = os.path.join(out_dir, f"{os.path.basename(os.path.dirname(tiffpath))}" + \
                                      f"_{'n_' if not raw_norm else 'rn_'}{'' if type(norm_bool) == int else 'im_'}" + \
                                      f"{os.path.dirname(normpath).split(os.path.sep)[-1]}_mean_{tiffZ}.tiff")
     cv2.imwrite(savepath, tiffBW)
     return savepath
+        
+def detect_sharp_change(data, threshold=None, direction='both'):
+    diff = np.diff(data)
+    if threshold is None:
+        threshold = np.std(diff)
+    if direction == 'increase':
+        sharp_change = np.where(diff > threshold)[0]
+    elif direction == 'decrease':
+        sharp_change = np.where(diff < -threshold)[0]
+    else:
+        sharp_increase = np.where(diff > threshold)[0]
+        sharp_decrease = np.where(diff < -threshold)[0]
+        sharp_change = np.concatenate((sharp_increase, sharp_decrease))
+    return sharp_change
+
