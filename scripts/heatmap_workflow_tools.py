@@ -1,4 +1,6 @@
 from matplotlib import pyplot as plt
+import matplotlib.colors
+import matplotlib.colorbar as colorbar
 import numpy as np
 import math
 from matplotlib.gridspec import GridSpec
@@ -15,7 +17,7 @@ def process_zmin_zmax(zmin, zmax, tiffs):
         zmin_out = 0
     if zmax == None:
         zmax_out = len(tiffs)
-    if zmin != None and zmax != None and zmin <= zmax - 2:
+    if zmin != None and zmax != None and zmin >= zmax - 2:
         raise ValueError(f"ZMin {zmin} must be 2 smaller than ZMax {zmax}")
     if zmin != None:
         if zmin >= 0:
@@ -36,9 +38,50 @@ def process_zmin_zmax(zmin, zmax, tiffs):
 # Description:
 # Pre-Conditions:
 # Post-Conditions:
-def plot_MSI(means, depth, title, savepath, save_figs):
+def plot_dist(means, medians, mins, maxs, vars, title, savepath, save_figs):
+    plt.plot(np.arange(0, len(means)), means, color = "#f03b20", linewidth = 3, label = "Mean")
+    plt.plot(np.arange(0, len(medians)), medians, color = "#ef8a62", linewidth = 3, label = "Median")
+    plt.plot(np.arange(0, len(mins)), mins, color = "#636363", linewidth = 3, label = "Min")
+    plt.plot(np.arange(0, len(maxs)), maxs, color = "#bdbdbd", linewidth = 3, label = "Max")
+    plt.plot(np.arange(0, len(vars)), vars, color = "#2ca25f", linewidth = 3, label = "Variance")
+    ax = plt.gca()
+    ymin, ymax = ax.get_ylim()
+    if ymin >= 0:
+        ax.set_ylim((0, ymax))
+    plt.title(title)
+    xmin, xmax = ax.get_xlim()
+    ax.set_xlim((xmin, xmax - 2))
+    plt.xlabel("Optical Slice Number")
+    plt.ylabel("Pixel Value")
+    plt.legend(bbox_to_anchor = (1.04,1), borderaxespad = 0)
+    if save_figs:
+        plt.savefig(savepath, format = "pdf")
+        print("figure saved")
+    plt.show()
+
+
+def plot_histograms(histograms, title, savepath, bin_labels, save_figs):
+    plt.imshow(histograms, cmap = 'hot', interpolation = 'nearest', origin = 'lower', aspect = 'auto', norm=matplotlib.colors.LogNorm())
+    plt.colorbar()
+    plt.xlabel("Histogram Bin (Range of Pixel Values)")
+    plt.ylabel("Slice Number")
+    plt.title(title)
+    ax = plt.gca()
+    ax.set_xticks(np.arange(1, len(bin_labels) + 1))
+    plt.xticks(np.arange(len(bin_labels)), bin_labels, rotation=45)
+    xmin, xmax = ax.get_xlim()
+    ax.set_xlim((xmin, xmax-.5))
+    if save_figs:
+        plt.savefig(savepath, format = "pdf", bbox_inches = 'tight')
+        print("figure saved")
+
+# Function:
+# Description:
+# Pre-Conditions:
+# Post-Conditions:
+def plot_MSI(means, title, savepath, save_figs):
     means = means / means.max() * 100
-    plt.plot(np.arange(0, len(means)) * depth, means, color = "#636363", linewidth = 3, label = "Mean")
+    plt.plot(np.arange(0, len(means)), means, color = "#636363", linewidth = 3, label = "Mean")
     ax = plt.gca()
     ymin, ymax = ax.get_ylim()
     if ymin >= 0:
@@ -46,7 +89,7 @@ def plot_MSI(means, depth, title, savepath, save_figs):
     plt.title(title)
     xmin, xmax = ax.get_xlim()
     ax.set_xlim((0, xmax - 2))
-    plt.xlabel("Slice Depth (\u03BCm)")
+    plt.xlabel("Optical Slice Number")
     plt.ylabel("Pixel Intensity (% max)")
     plt.legend(loc="lower left")
     if save_figs:
@@ -59,13 +102,13 @@ def plot_MSI(means, depth, title, savepath, save_figs):
 # Description:
 # Pre-Conditions:
 # Post-Conditions:
-def plot_MSI_grouped(means_soi, means_ns, means_soi_ns, depth, title, savepath, save_figs):
+def plot_MSI_grouped(means_soi, means_ns, means_soi_ns, title, savepath, save_figs):
     means_soi = means_soi/means_soi.max() *100
     means_ns = means_ns/means_ns.max() *100
     means_soi_ns = means_soi_ns/means_soi_ns.max() *100
-    plt.plot(np.arange(0, len(means_soi)) * depth, means_soi, color = "#cb181d", linewidth = 3, label = "Signal of Interest (SOI)")
-    plt.plot(np.arange(0, len(means_ns)) * depth, means_ns, color = "#ef8a62", linewidth = 3, label = "Normalization Signal (NS)")
-    plt.plot(np.arange(0, len(means_soi_ns)) * depth, means_soi_ns, color = "#999999", linewidth = 3, label = "Normalized SOI")
+    plt.plot(np.arange(0, len(means_soi)), means_soi, color = "#cb181d", linewidth = 3, label = "Signal of Interest (SOI)")
+    plt.plot(np.arange(0, len(means_ns)), means_ns, color = "#ef8a62", linewidth = 3, label = "Normalization Signal (NS)")
+    plt.plot(np.arange(0, len(means_soi_ns)), means_soi_ns, color = "#999999", linewidth = 3, label = "Normalized SOI")
     ax = plt.gca()
     ymin, ymax = ax.get_ylim()
     if ymin >= 0:
@@ -73,7 +116,7 @@ def plot_MSI_grouped(means_soi, means_ns, means_soi_ns, depth, title, savepath, 
     plt.title(title)
     xmin, xmax = ax.get_xlim()
     ax.set_xlim((0, xmax - 2))
-    plt.xlabel("Slice Depth (\u03BCm)")
+    plt.xlabel("Optical Slice Number")
     plt.ylabel("Pixel Intensity (% max)")
     plt.legend(loc="lower left")
     if save_figs:
@@ -86,11 +129,11 @@ def plot_MSI_grouped(means_soi, means_ns, means_soi_ns, depth, title, savepath, 
 # Description:
 # Pre-Conditions:
 # Post-Conditions:
-def plot_MSI_soi_ns(soi, ns, means_soi, means_ns, depth, title, savepath, save_figs):
+def plot_MSI_soi_ns(soi, ns, means_soi, means_ns, title, savepath, save_figs):
     means_soi = means_soi/means_soi.max() *100
     means_ns = means_ns/means_ns.max() *100
-    plt.plot(np.arange(0, len(means_soi)) * depth, means_soi, color = "#cb181d", linewidth = 3, label = soi)
-    plt.plot(np.arange(0, len(means_ns)) * depth, means_ns, color = "#ef8a62", linewidth = 3, label = ns)
+    plt.plot(np.arange(0, len(means_soi)), means_soi, color = "#cb181d", linewidth = 3, label = soi)
+    plt.plot(np.arange(0, len(means_ns)), means_ns, color = "#ef8a62", linewidth = 3, label = ns)
     ax = plt.gca()
     ymin, ymax = ax.get_ylim()
     if ymin >= 0:
@@ -98,7 +141,7 @@ def plot_MSI_soi_ns(soi, ns, means_soi, means_ns, depth, title, savepath, save_f
     plt.title(title)
     xmin, xmax = ax.get_xlim()
     ax.set_xlim((0, xmax - 2))
-    plt.xlabel("Slice Depth (\u03BCm)")
+    plt.xlabel("Optical Slice Number")
     plt.ylabel("Pixel Intensity (% max)")
     plt.legend(loc="lower left")
     if save_figs:
