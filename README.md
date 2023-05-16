@@ -7,7 +7,10 @@ A common problem with laser scanning confocal microscopy is the intensity of exc
 # Quickstart Guide (see below for more detailed instructions for novice users)
 ## Installation Instructions
 Using pip
-'pip install -r requirements.txt'
+
+'''
+pip install -r requirements.txt
+'''
 
 Using conda
 'conda install --file requirements.txt'
@@ -16,9 +19,9 @@ Using conda
 
 # Detailed Installation and Operation Instructions for Novice Users
 We reccomend using python 3.11.3 (latest release as of April 5, 2013) which can be found
-[here]=(https://www.python.org/downloads/)
+[here](https://www.python.org/downloads/)
 
-We run proDiVis and subsequently python through [Anaconda] = (https://www.anaconda.com/), which is a software management tool designed to simplify the process of working with python and many python packages required for scientific computing. Using either method of installation works.
+We run proDiVis and subsequently python through [Anaconda](https://www.anaconda.com/), which is a software management tool designed to simplify the process of working with python and many python packages required for scientific computing. Using either method of installation works.
 
 navigate to the directory (folder) where you wish to install proDiVis
 using the command line
