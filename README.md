@@ -4,13 +4,8 @@ A Z-stack validation suite written in the python programming language, designed 
 ## Inherent Problems with Confocal Deep Imaging
 A common problem with laser scanning confocal microscopy is the intensity of excitation light and emission signal from fluorophores decrease as they travel through 3D specimens, resulting in weaker signal reaching the detector. To facilitate image interpretation, we developed proDiVis: a visualization algorithm involving focal-plane-specific signal normalization. However, there are limitations to optical sectioning while imaging thick specimens, namely fluorescence intensity loss as a function of imaging depth. The most widely used fluorophores have emission light in the visible spectrum that can only penetrate a limited distance through biological material. This is a known contributor to the fundamental depth limit, caused by several physical properties such as light scattering and absorption. To address the above issues, we developed a computational method to proportionally compare pixel values across the depth of 3D specimens, accounting for the decrease in fluorescence intensity we and others have previously observed. While there are many existing programs or software available for image analysis, to the best of our knowledge, none of them account for loss of signal by normalizing against a housekeeping signal, and many of them are expensive and/or require a high level of technical expertise to use.
 
-## Installation Instructions
-Using pip
-`pip install -r requirements.txt`
-
-Using conda
-`conda install --file requirements.txt`
-
+## Dependencies
+opencv, matplotlib, scipy, pandas, numpy, jupyter
 
 `Data_Pipeline.ipynb` contains all the necessary code to run proDiVis
 
@@ -39,7 +34,7 @@ macOS: `source env_name/bin/activate`
 
 #### install required packages
 
-`pip install -r requirements.txt`
+`pip install opencv-python matplotlib scipy pandas numpy jupyter`
 
 ## Using conda to create an environment
 #### navigate to the directory (folder) where you wish to install proDiVis
@@ -52,7 +47,7 @@ macOS: `source env_name/bin/activate`
 
 #### install required packages
 
-`conda install --file requirements.txt`
+`conda install -c conda-forge opencv matplotlib scipy pandas numpy jupyter`
 
 # Operation Instructions
 #### Assuming the images needed are already saved in a bioformat file
@@ -86,3 +81,4 @@ In the next cell, the path to the scaled images will need to be typed and assign
 
 
 #### 10. The rest of the `Data_Pipeline.ipynb` file is designed to work seamlessly without the need for any more user input
+
